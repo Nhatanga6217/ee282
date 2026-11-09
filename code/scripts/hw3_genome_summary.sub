@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Homework 3: download and summarize the D. melanogaster genome (FlyBase r6.66)
+set -euo pipefail
+
+url=https://s3ftp.flybase.org/genomes/Drosophila_melanogaster/dmel_r6.66_FB2025_05/fasta
+file=dmel-all-chromosome-r6.66.fasta.gz
+
+mkdir -p data/raw output/reports
+cd data/raw
+
+# Download the genome and FlyBase's list of checksums
+wget -nc "$url/$file"
+wget -O fasta_md5sum.txt "$url/md5sum.txt"
+
+# File integrity: compare our file's checksum to FlyBase's
+grep "$file" fasta_md5sum.txt | md5sum -c -
+
+# Summarize the genome
+faSize "$file" > ../../output/reports/genome_faSize.txt
+tail -n 3 ../../output/reports/genome_faSize.txt
