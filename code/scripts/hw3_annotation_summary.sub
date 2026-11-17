@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Homework 3: download and summarize the D. melanogaster GTF annotation (FlyBase r6.66)
+set -euo pipefail
+
+url=https://s3ftp.flybase.org/genomes/Drosophila_melanogaster/dmel_r6.66_FB2025_05/gtf
+file=dmel-all-r6.66.gtf.gz
+
+mkdir -p data/raw output/reports
+cd data/raw
+
+wget -nc "$url/$file"
+wget -O gtf_md5sum.txt "$url/md5sum.txt"
+
+# File integrity
+grep "$file" gtf_md5sum.txt | md5sum -c -
+
+# 1. Number of features of each type, most common first
+bioawk -c gff '{ print $feature }' "$file" \
+| sort \
+| uniq -c \
+| sort -k1,1nr \
+> ../../output/reports/feature_counts.txt
+
+# 2. Number of genes on each main chromosome arm
+bioawk -c gff '$feature == "gene" && $seqname ~ /^(X|Y|2L|2R|3L|3R|4)$/ { print $seqname }' "$file" \
+| sort \
+| uniq -c \
+| sort -k1,1nr \
+> ../../output/reports/genes_per_arm.txt
+
+cat ../../output/reports/feature_counts.txt
+cat ../../output/reports/genes_per_arm.txt
